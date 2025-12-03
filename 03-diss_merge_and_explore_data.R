@@ -5,8 +5,8 @@ library(tidyverse)
 # -------------
 
 # College results data
-college_results <- read_delim('COLLEGE_RESULTS_VIEW_2021.CSV', delim = '|', na = c('', 'NA', '\\N'), col_types = cols('UNIQUE_IDENTIFICATION_NUMBER_OF_THE_INSTITUTION' = 'c'))%>%
-  select(-`Institution Name`, -`Institution Size Category`, -`Degree of Urbanization`, -`Sector of Institution`, -`City of Institution`)                                                                                   
+college_results <- read_delim('ANALYST_VIEW_2023.CSV', na = c('', 'NA', '\\N'), col_types = cols('UNITID' = 'c'))%>%
+  select(-`Institution Name`, -`Institution Size Category`, -`Degree of Urbanization`, -`Sector of Institution`, -`City`)                                                                                   
 
 # DROPPING MULTIPLE VARIABLES
 # select(-`Institution Name`, -Address)
@@ -23,10 +23,10 @@ scorecard <- read_csv('scorecard.csv', col_types = cols('unitid' = 'c'))
 # --------------------
 
 results <- college_results %>% 
-  left_join(ipeds, by = c('UNIQUE_IDENTIFICATION_NUMBER_OF_THE_INSTITUTION' = 'UnitID')) %>% 
-  left_join(scorecard, by = c('UNIQUE_IDENTIFICATION_NUMBER_OF_THE_INSTITUTION' = 'unitid'))
+  left_join(ipeds, by = c('UNITID' = 'UnitID')) %>% 
+  left_join(scorecard, by = c('UNITID' = 'unitid'))
 
-write_csv(results, file = 'diss_results.csv')
+write_csv(results, file = 'diss_or_bust_results.csv')
 
 
 # -----------------
