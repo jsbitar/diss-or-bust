@@ -34,7 +34,7 @@ sc_dict("debt")
 sc <- sc_init() %>% 
   sc_select(
     unitid,
-    mn_earn_wne_inc1_p10, mn_earn_wne_p10, mn_earn_wne_inc1_p6, mn_earn_wne_p6, md_earn_wne_inc1_p8, md_earn_wne_p8, lo_inc_debt_mdn, debt_mdn, lo_inc_debt_n, debt_n,
+    md_earn_wne_inc1_p10, mn_earn_wne_p10, mn_earn_wne_inc1_p6, mn_earn_wne_p6, md_earn_wne_inc1_p8, md_earn_wne_p8, lo_inc_debt_mdn, debt_mdn, lo_inc_debt_n, debt_n,
     hbcu, pbi, annhi, tribal, aanapii, hsi, nanti
   ) %>%
   sc_year('latest') %>%
@@ -63,8 +63,8 @@ sc <- sc %>%
 
 sc <- sc %>%
   rename(
-    "10 Year Mean Earnings (0-30,000)" = "mn_earn_wne_inc1_p10",
-    "10 Year Mean Earnings" = "mn_earn_wne_p10",
+    "10 Year Median Earnings (0-30,000)" = "md_earn_wne_inc1_p10",
+    "10 Year Median Earnings" = "mn_earn_wne_p10",
     "6 Year Mean Earnings (0-30,000)" = "mn_earn_wne_inc1_p6",
     "6 Year Mean Earnings" = "mn_earn_wne_p6",
     "8 Year Median Earnings (0-30,000)" = "md_earn_wne_inc1_p8",
