@@ -1,22 +1,24 @@
 library(tidyverse)
 
+data_dir <- file.path('.', 'data')
+
+
 # -------------
 # Read in data
 # -------------
 
 # College results data
-college_results <- read_delim('ANALYST_VIEW_2023.CSV', na = c('', 'NA', '\\N'), col_types = cols('UNITID' = 'c'))%>%
-  select(-`Institution Name`, -`Institution Size Category`, -`Degree of Urbanization`, -`Sector of Institution`, -`City`)                                                                                   
+college_results <- read_delim(file.path(data_dir, 'ANALYST_VIEW_2023.CSV'), na = c('', 'NA', '\\N'), col_types = cols('UNITID' = 'c'))%>%
+  select(-`Institution Name`, -`Institution Size Category`, -`Degree of Urbanization`, -`Sector of Institution`, -`City`, -`Latitude`, -`Longitude`, -`Level of Institution`, -`Control of Institution`)                                                                                   
 
 # DROPPING MULTIPLE VARIABLES
 # select(-`Institution Name`, -Address)
 
 # IPEDS data
-ipeds <- read_csv('ipeds.csv', col_types = cols('UnitID' = 'c'))
+ipeds <- read_csv(file.path(data_dir, 'ipeds.csv'), col_types = cols('UnitID' = 'c'))
 
 # College scorecard data
-scorecard <- read_csv('scorecard.csv', col_types = cols('unitid' = 'c'))
-
+scorecard <- read_csv(file.path(data_dir, 'scorecard.csv'), col_types = cols('unitid' = 'c'))
 
 # --------------------
 # Merge and save data AND RENAMING VARIABLES
@@ -24,9 +26,15 @@ scorecard <- read_csv('scorecard.csv', col_types = cols('unitid' = 'c'))
 
 results <- college_results %>% 
   left_join(ipeds, by = c('UNITID' = 'UnitID')) %>% 
-  left_join(scorecard, by = c('UNITID' = 'unitid'))
+  left_join(scorecard, by = c('UNITID' = 'unitid')) %>% 
+  mutate(
+    `In-State Cost of Attendance` = rowMeans(select(., `In-State Cost of Attendance (On Campus)`, `In-State Cost of Attendance (Off Campus)`), na.rm = T),
+    `In-State Cost of Attendance` = if_else(is.nan(`In-State Cost of Attendance`), NA, round(`In-State Cost of Attendance`, 0)),
+    `Debt-to-Earnings Ratio` = `Median Student Loan Debt` / `10 Year Median Earnings`,
+    `Debt-to-Earnings Ratio (0-30,000)` = `Median Student Loan Debt (0-30,000)` / `10 Year Median Earnings (0-30,000)`
+  )
 
-write_csv(results, file = 'diss_or_bust_results.csv')
+write_csv(results, file = file.path(data_dir, 'regression_results.csv'))
 
 
 # -----------------

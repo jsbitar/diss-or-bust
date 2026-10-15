@@ -8,6 +8,9 @@
 library(tidyverse)
 library(readxl)
 
+data_dir <- file.path('.', 'data')
+
+
 # ------------------
 # Unzip IPEDS files
 # ------------------
@@ -234,4 +237,4 @@ ipeds <- hd %>%
   "Average Net Price for Students Awarded Title IV Federal Financial Aid, Income Level (110,001 or more)" = "npis452" 
   )
 
-write_csv(ipeds, file = 'ipeds.csv')
+write_csv(ipeds, file = file.path(data_dir, 'ipeds.csv'))

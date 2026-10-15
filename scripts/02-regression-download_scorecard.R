@@ -6,6 +6,8 @@
 library(tidyverse)
 library(rscorecard)
 
+data_dir <- file.path('.', 'data')
+
 
 # -----------------------
 # Search data dictionary
@@ -87,4 +89,4 @@ sc <- sc %>%
 # Save data
 # ----------
 
-write_csv(sc, file = 'scorecard.csv')
+write_csv(sc, file = file.path(data_dir, 'scorecard.csv'))
