@@ -1,5 +1,7 @@
 library(tidyverse)
 
+options(scipen = 999)
+
 data_dir <- file.path('.', 'data')
 
 
@@ -7,16 +9,16 @@ data_dir <- file.path('.', 'data')
 results <- read_csv(file.path(data_dir, 'regression_results.csv'))
 
 # Convert categorical variables to factor
-results$`Degree of Urbanization` <- factor(
-  results$`Degree of Urbanization`,
-  levels = c(
-    'City: Large', 'City: Midsize', 'City: Small',
-    'Suburb: Large', 'Suburb: Midsize', 'Suburb: Small',
-    'Town: Fringe', 'Town: Distant', 'Town: Remote',
-    'Rural: Fringe', 'Rural: Distant', 'Rural: Remote'
-  ),
-  ordered = T
-)
+#results$`Degree of Urbanization` <- factor(
+#  results$`Degree of Urbanization`,
+#  levels = c(
+#    'City: Large', 'City: Midsize', 'City: Small',
+#    'Suburb: Large', 'Suburb: Midsize', 'Suburb: Small',
+#    'Town: Fringe', 'Town: Distant', 'Town: Remote',
+#    'Rural: Fringe', 'Rural: Distant', 'Rural: Remote'
+#  ),
+#  ordered = T
+#)
 
 # Glimpse
 results %>% glimpse()
@@ -54,7 +56,101 @@ for (v in variables) {
   print(table(is.na(filtered_results[[v]])))  # TRUE = # of rows that are missing values
   print(summary(filtered_results[[v]]))
   
-  if (class(filtered_results[[v]]) == 'character') {
-    print(table(filtered_results[[v]]))
-  }
+  #if (class(filtered_results[[v]]) == 'character') {
+    #print(table(filtered_results[[v]]))
+ #}
+    if (is.character(filtered_results[[v]]) || is.factor(filtered_results[[v]])) {
+      print(table(filtered_results[[v]]))
+    }
 }
+
+#Regression Equations
+
+#no independent variables
+lm(
+  `10 Year Median Earnings (0-30,000)` ~ 1,
+  data = filtered_results
+)
+
+#mod zero + summary function
+mod0 <- lm(
+  `10 Year Median Earnings (0-30,000)` ~ 1,
+  data = filtered_results
+)
+
+summary(mod0)
+
+#net price inquiry, mod1
+# add variables one at a time
+filtered_results <- filtered_results %>%
+  mutate(
+    net_price_0_30k_1000 = `Average net price (income $0-30k)-students awarded Title IV aid 2022-23` / 1000
+  )
+
+#option 1
+mod1 <- lm(
+  `10 Year Median Earnings (0-30,000)` ~ `Average net price (income $0-30k)-students awarded Title IV aid 2022-23`,
+  data = filtered_results
+)
+
+summary(mod1)
+#option 2 (x in 1000's)
+# Add variables one at a time
+
+mod1 <- lm(
+  
+  `10 Year Median Earnings (0-30,000)` ~ net_price_0_30k_1000,
+  
+  data = filtered_results
+  
+)
+
+summary(mod1)
+
+#Urbanization inquiry
+filtered_results %>% count(`Degree of Urbanization`)
+
+mod2 <- lm(
+  `10 Year Median Earnings (0-30,000)` ~ 
+    net_price_0_30k_1000 +
+    factor(`Degree of Urbanization`, ordered = FALSE),
+  data = filtered_results
+)
+
+summary(mod2)
+
+# Collapse urbanization categories
+filtered_results <- filtered_results %>%
+  mutate(
+    urbanization = case_when(
+      `Degree of Urbanization` %in% c("Town: Fringe", "Town: Distant", "Town: Remote") ~ "Town",
+      `Degree of Urbanization` %in% c("Rural: Fringe", "Rural: Distant", "Rural: Remote") ~ "Rural",
+      `Degree of Urbanization` %in% c("Suburb: Midsize", "Suburb: Small") ~ "Suburb: Midsize/Small",
+      TRUE ~ as.character(`Degree of Urbanization`)
+    ),
+    urbanization = factor(
+      urbanization,
+      levels = c(
+        "City: Large",
+        "City: Midsize",
+        "City: Small",
+        "Suburb: Large",
+        "Suburb: Midsize/Small",
+        "Town",
+        "Rural"
+      )
+    )
+  )
+
+# Check new categories
+filtered_results %>% count(urbanization)
+
+# Regression
+mod2 <- lm(
+  `10 Year Median Earnings (0-30,000)` ~
+    net_price_0_30k_1000 +
+    urbanization,
+  data = filtered_results
+)
+
+summary(mod2)
