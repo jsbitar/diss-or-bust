@@ -84,7 +84,8 @@ summary(mod0)
 # add variables one at a time
 filtered_results <- filtered_results %>%
   mutate(
-    net_price_0_30k_1000 = `Average net price (income $0-30k)-students awarded Title IV aid 2022-23` / 1000
+    net_price_0_30k_1000 = `Average net price (income $0-30k)-students awarded Title IV aid 2022-23` / 1000, 
+    in_state_coa_1000 = `In-State Cost of Attendance` / 1000
   )
 
 #option 1
@@ -94,6 +95,7 @@ mod1 <- lm(
 )
 
 summary(mod1)
+
 #option 2 (x in 1000's)
 # Add variables one at a time
 
@@ -145,12 +147,112 @@ filtered_results <- filtered_results %>%
 # Check new categories
 filtered_results %>% count(urbanization)
 
-# Regression
-mod2 <- lm(
-  `10 Year Median Earnings (0-30,000)` ~
-    net_price_0_30k_1000 +
-    urbanization,
+#Running the numerical X Vars
+#Net Price
+mod1 <- lm(
+  
+  `10 Year Median Earnings (0-30,000)` ~ net_price_0_30k_1000,
+  
+  data = filtered_results
+  
+)
+
+summary(mod1)
+
+
+#COA
+mod1 <- lm(
+  `10 Year Median Earnings (0-30,000)` ~ `In-State Cost of Attendance`,
   data = filtered_results
 )
 
-summary(mod2)
+summary(mod1)
+
+#COA / 100s
+mod1 <- lm(
+  
+  `10 Year Median Earnings (0-30,000)` ~ in_state_coa_1000,
+  
+  data = filtered_results
+  
+)
+
+summary(mod1)
+
+
+# Med Debt / 1000s
+mod1 <- lm(
+  
+  `10 Year Median Earnings (0-30,000)` ~ in_state_coa_1000,
+  
+  data = filtered_results
+  
+)
+
+summary(mod1)
+
+# earnings ONLY (0-30k) / looping x vars / with 1000s
+x_vars <- c("net_price_0_30k_1000", "in_state_coa_1000")
+# Save all model summaries in one file
+for (i in seq_along(x_vars)) {
+  model <- lm(
+    as.formula(paste0("`10 Year Median Earnings (0-30,000)` ~ `", x_vars[i], "`")),
+    data = filtered_results
+  )
+  capture.output(
+    {
+      cat("\n========================\n")
+      cat("Model: `10 Year Median Earnings (0-30,000)` ~", x_vars[i], "\n")
+      cat("========================\n\n")
+      print(summary(model))
+    },
+    file = "numerical_regression_summary.txt",
+    append = (i > 1)
+  )
+}
+
+
+# debt-to-earnings (0-30k) / looping x vars / no 1000s
+x_vars <- c("Average net price (income $0-30k)-students awarded Title IV aid 2022-23", "In-State Cost of Attendance")
+# Save all model summaries in one file
+for (i in seq_along(x_vars)) {
+  model <- lm(
+    as.formula(paste0("`Debt-to-Earnings Ratio (0-30,000)` ~ `", x_vars[i], "`")),
+    data = filtered_results
+  )
+  capture.output(
+    {
+      cat("\n========================\n")
+      cat("Model: `Debt-to-Earnings Ratio (0-30,000)` ~", x_vars[i], "\n")
+      cat("========================\n\n")
+      print(summary(model))
+    },
+    file = "numerical_regression_summary.txt",
+    append = (i > 1)
+  )
+}
+
+
+
+# Med Earnings 
+# 
+# Cost of Tuition 
+# 
+# Average Grant Aid for Students With Family Incomes of $0–$30,000 
+# 
+# Percent of Students Receiving Pell Grants 
+# 
+
+# Total Grant Award Amount for Students With Family Incomes of $0–$30,000 
+# 
+# Instructional Expenses per FTE 
+# 
+# Graduation rate 
+# 
+# Student-faculty ratio 
+# 
+# Proportion of Faculty That Are Full-Time 
+# 
+# CDR 
+# 
+# ADD: % degrees awarded... from CR
