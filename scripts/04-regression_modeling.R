@@ -99,6 +99,8 @@ filtered_results <- filtered_results %>%
 #    pct_arts_degrees_1000 = `Percent Degrees Awarded in Arts & Humanities` / 1000,
   )
 
+filtered_results$pell_proportion <-
+  filtered_results$`Percent of Students Awarded Pell Grants` / 100
 
 #option 1
 mod1 <- lm(
