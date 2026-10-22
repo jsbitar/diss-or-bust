@@ -85,8 +85,20 @@ summary(mod0)
 filtered_results <- filtered_results %>%
   mutate(
     net_price_0_30k_1000 = `Average net price (income $0-30k)-students awarded Title IV aid 2022-23` / 1000, 
-    in_state_coa_1000 = `In-State Cost of Attendance` / 1000
+    in_state_coa_1000 = `In-State Cost of Attendance` / 1000,
+    in_state_tuition_1000 = `Published In-State Tuition` / 1000,
+    avg_grant_aid_0_30k_1000 = `Average grant/scholarship aid awarded-income $0-30k 2022-23` / 1000,
+#    pct_pell_1000 = `Percent of Students Awarded Pell Grants` / 1000,
+    total_grant_aid_0_30k_1000 = `Total grant/scholarship aid awarded-income $0-30k 2022-23` / 1000,
+    instruction_expenses_fte_1000 = `Instructional expenditures per full-time equivalent student` / 1000,
+#    grad_rate_4yr_1000 = `Graduation rate - 4 years (total)` / 1000,
+#    stu_fac_ratio_1000 = `Student-to-faculty ratio` / 1000,
+#    faculty_fte_1000 = `Proportion of faculty that is full-time` / 1000,
+#    cdr_1000 = `Three-year cohort default rate` / 1000,
+#    pct_stem_degrees_1000 = `Percent Degrees Awarded in Science, Technology, Engineering, and Math` / 1000,
+#    pct_arts_degrees_1000 = `Percent Degrees Awarded in Arts & Humanities` / 1000,
   )
+
 
 #option 1
 mod1 <- lm(
@@ -113,7 +125,7 @@ summary(mod1)
 filtered_results %>% count(`Degree of Urbanization`)
 
 mod2 <- lm(
-  `10 Year Median Earnings (0-30,000)` ~ 
+  `Debt-to-Earnings Ratio (0-30,000)` ~ 
     net_price_0_30k_1000 +
     factor(`Degree of Urbanization`, ordered = FALSE),
   data = filtered_results
@@ -147,7 +159,16 @@ filtered_results <- filtered_results %>%
 # Check new categories
 filtered_results %>% count(urbanization)
 
-#Running the numerical X Vars
+mod2 <- lm(
+  `10 Year Median Earnings (0-30,000)` ~ 
+    net_price_0_30k_1000 +
+    factor(`Degree of Urbanization`, ordered = FALSE),
+  data = filtered_results
+)
+
+summary(mod2)
+
+#Running the numerical X Vars / Earnings ONLY
 #Net Price
 mod1 <- lm(
   
@@ -168,7 +189,7 @@ mod1 <- lm(
 
 summary(mod1)
 
-#COA / 100s
+#COA / 1000s
 mod1 <- lm(
   
   `10 Year Median Earnings (0-30,000)` ~ in_state_coa_1000,
@@ -191,8 +212,40 @@ mod1 <- lm(
 
 summary(mod1)
 
-# earnings ONLY (0-30k) / looping x vars / with 1000s
-x_vars <- c("net_price_0_30k_1000", "in_state_coa_1000")
+x_vars <- c(
+  "net_price_0_30k_1000",
+  "in_state_coa_1000",
+  "in_state_tuition_1000",
+  "avg_grant_aid_0_30k_1000",
+  "pct_pell_1000",
+  "total_grant_aid_0_30k_1000",
+  "instruction_expenses_fte_1000",
+  "grad_rate_4yr_1000",
+  "stu_fac_ratio_1000",
+  "faculty_fte_1000",
+  "cdr_1000",
+  "pct_stem_degrees_1000",
+  "pct_arts_degrees_1000"
+)
+
+### TEST Earnings ONLY (0-30k) / looping X vars
+
+# DOLLARS VARS / 1000s
+# COA
+# Cost of Tuition
+# Net Price
+# Average Grant Aid for Students With Family Incomes of $0–$30,000 
+# Total Grant Award Amount for Students With Family Incomes of $0–$30,000 
+# Instructional Expenses per FTE 
+
+x_vars <- c(
+  "net_price_0_30k_1000",
+  "in_state_coa_1000",
+  "in_state_tuition_1000",
+  "avg_grant_aid_0_30k_1000",
+  "total_grant_aid_0_30k_1000",
+  "instruction_expenses_fte_1000"
+)
 # Save all model summaries in one file
 for (i in seq_along(x_vars)) {
   model <- lm(
@@ -206,14 +259,57 @@ for (i in seq_along(x_vars)) {
       cat("========================\n\n")
       print(summary(model))
     },
-    file = "numerical_regression_summary.txt",
+    file = "dollar_earnings_regression_summary.txt",
+    append = (i > 1)
+  )
+}
+
+# OTHER VARS
+# Percent of Students Receiving Pell Grants
+# Graduation rate 
+# Student-faculty ratio 
+# Proportion of Faculty That Are Full-Time 
+# CDR 
+# ADD: % degrees awarded... from CR: STEM, Arts & Humanities
+
+x_vars <- c("Percent of Students Awarded Pell Grants", "Graduation rate - 4 years (total)", "Student-to-faculty ratio", "Proportion of faculty that is full-time", "Three-year cohort default rate", "Percent Degrees Awarded in Science, Technology, Engineering, and Math", "Percent Degrees Awarded in Arts & Humanities")
+# Save all model summaries in one file
+for (i in seq_along(x_vars)) {
+  model <- lm(
+    as.formula(paste0("`10 Year Median Earnings (0-30,000)` ~ `", x_vars[i], "`")),
+    data = filtered_results
+  )
+  capture.output(
+    {
+      cat("\n========================\n")
+      cat("Model: `10 Year Median Earnings (0-30,000)` ~", x_vars[i], "\n")
+      cat("========================\n\n")
+      print(summary(model))
+    },
+    file = "other_earnings_regression_summary.txt",
     append = (i > 1)
   )
 }
 
 
-# debt-to-earnings (0-30k) / looping x vars / no 1000s
-x_vars <- c("Average net price (income $0-30k)-students awarded Title IV aid 2022-23", "In-State Cost of Attendance")
+### TEST RATIO: debt-to-earnings (0-30k) / looping X vars
+
+# DOLLARS VARS / 1000s
+# COA
+# Cost of Tuition
+# Net Price
+# Average Grant Aid for Students With Family Incomes of $0–$30,000 
+# Total Grant Award Amount for Students With Family Incomes of $0–$30,000 
+# Instructional Expenses per FTE 
+
+x_vars <- c(
+  "net_price_0_30k_1000",
+  "in_state_coa_1000",
+  "in_state_tuition_1000",
+  "avg_grant_aid_0_30k_1000",
+  "total_grant_aid_0_30k_1000",
+  "instruction_expenses_fte_1000"
+)
 # Save all model summaries in one file
 for (i in seq_along(x_vars)) {
   model <- lm(
@@ -227,32 +323,51 @@ for (i in seq_along(x_vars)) {
       cat("========================\n\n")
       print(summary(model))
     },
-    file = "numerical_regression_summary.txt",
+    file = "dollar_ratio_regression_summary.txt",
     append = (i > 1)
   )
 }
 
-
-
-# Med Earnings 
-# 
-# Cost of Tuition 
-# 
-# Average Grant Aid for Students With Family Incomes of $0–$30,000 
-# 
-# Percent of Students Receiving Pell Grants 
-# 
-
-# Total Grant Award Amount for Students With Family Incomes of $0–$30,000 
-# 
-# Instructional Expenses per FTE 
-# 
+# OTHER VARS
+# Percent of Students Receiving Pell Grants
 # Graduation rate 
-# 
 # Student-faculty ratio 
-# 
 # Proportion of Faculty That Are Full-Time 
-# 
 # CDR 
-# 
-# ADD: % degrees awarded... from CR
+# ADD: % degrees awarded... from CR: STEM, Arts & Humanities
+
+x_vars <- c("Percent of Students Awarded Pell Grants", "Graduation rate - 4 years (total)", "Student-to-faculty ratio", "Proportion of faculty that is full-time", "Three-year cohort default rate", "Percent Degrees Awarded in Science, Technology, Engineering, and Math", "Percent Degrees Awarded in Arts & Humanities")
+# Save all model summaries in one file
+for (i in seq_along(x_vars)) {
+  model <- lm(
+    as.formula(paste0("`Debt-to-Earnings Ratio (0-30,000)` ~ `", x_vars[i], "`")),
+    data = filtered_results
+  )
+  capture.output(
+    {
+      cat("\n========================\n")
+      cat("Model: `Debt-to-Earnings Ratio (0-30,000)` ~", x_vars[i], "\n")
+      cat("========================\n\n")
+      print(summary(model))
+    },
+    file = "other_ratio_regression_summary.txt",
+    append = (i > 1)
+  )
+}
+
+#X vars for consideration
+  
+#Locale/Urbanicity
+
+# COA
+# Cost of Tuition
+# Net Price
+# Average Grant Aid for Students With Family Incomes of $0–$30,000 
+# Percent of Students Receiving Pell Grants
+# Total Grant Award Amount for Students With Family Incomes of $0–$30,000 
+# Instructional Expenses per FTE 
+# Graduation rate 
+# Student-faculty ratio 
+# Proportion of Faculty That Are Full-Time 
+# CDR 
+# ADD: % degrees awarded... from CR: STEM, Arts & Humanities
