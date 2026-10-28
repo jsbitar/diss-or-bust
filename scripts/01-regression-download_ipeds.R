@@ -100,7 +100,8 @@ sfa <- read_csv(
     NPIST2 = 'n', NPIS412 = 'n', NPIS422 = 'n', NPIS432 = 'n', NPIS442 = 'n', NPIS452 = 'n'
   )
 ) %>% 
-  rename_with(str_to_lower)
+  rename_with(str_to_lower)%>%
+  mutate(pgrnt_p=pgrnt_p/100)
 
 # ------------------
 # Renaming column (dummy) values

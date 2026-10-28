@@ -99,8 +99,8 @@ filtered_results <- filtered_results %>%
 #    pct_arts_degrees_1000 = `Percent Degrees Awarded in Arts & Humanities` / 1000,
   )
 
-filtered_results$pell_proportion <-
-  filtered_results$`Percent of Students Awarded Pell Grants` / 100
+#filtered_results$pell_proportion <-
+#  filtered_results$`Percent of Students Awarded Pell Grants` / 100
 
 #option 1
 mod1 <- lm(
@@ -274,7 +274,7 @@ for (i in seq_along(x_vars)) {
 # CDR 
 # ADD: % degrees awarded... from CR: STEM, Arts & Humanities
 
-x_vars <- c("Percent of Students Awarded Pell Grants", "Graduation rate - 4 years (total)", "Student-to-faculty ratio", "Proportion of faculty that is full-time", "Three-year cohort default rate", "Percent Degrees Awarded in Science, Technology, Engineering, and Math", "Percent Degrees Awarded in Arts & Humanities")
+x_vars <- c("Percent of Students Awarded Pell Grants", "Graduation rate - 4 years (total)", "Student-to-faculty ratio", "Proportion of faculty that is full-time", "Three-year cohort default rate", "Percent Degrees Awarded in Science, Technology, Engineering, and Math", "Percent Degrees Awarded in Arts & Humanities", "urbanization")
 # Save all model summaries in one file
 for (i in seq_along(x_vars)) {
   model <- lm(
@@ -338,7 +338,7 @@ for (i in seq_along(x_vars)) {
 # CDR 
 # ADD: % degrees awarded... from CR: STEM, Arts & Humanities
 
-x_vars <- c("Percent of Students Awarded Pell Grants", "Graduation rate - 4 years (total)", "Student-to-faculty ratio", "Proportion of faculty that is full-time", "Three-year cohort default rate", "Percent Degrees Awarded in Science, Technology, Engineering, and Math", "Percent Degrees Awarded in Arts & Humanities")
+x_vars <- c("Percent of Students Awarded Pell Grants", "Graduation rate - 4 years (total)", "Student-to-faculty ratio", "Proportion of faculty that is full-time", "Three-year cohort default rate", "Percent Degrees Awarded in Science, Technology, Engineering, and Math", "Percent Degrees Awarded in Arts & Humanities", "urbanization")
 # Save all model summaries in one file
 for (i in seq_along(x_vars)) {
   model <- lm(
@@ -356,6 +356,8 @@ for (i in seq_along(x_vars)) {
     append = (i > 1)
   )
 }
+
+
 
 #X vars for consideration
   
