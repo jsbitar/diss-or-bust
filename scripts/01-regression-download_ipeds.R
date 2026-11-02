@@ -61,8 +61,50 @@ ic_ay <- read_csv(
 ) %>% 
   rename_with(str_to_lower) %>% 
   mutate(
+    instate_oncampus_coa =
+      chg2at2 + chg2af2 + chg4ay2 + chg5ay2 + chg6ay2,
+    
+    instate_offcampus_coa =
+      chg2at2 + chg2af2 + chg4ay2 + chg7ay2 + chg8ay2,
+    
+    instate_average_coa = rowMeans(
+      cbind(instate_oncampus_coa, instate_offcampus_coa),
+      na.rm = TRUE
+    ),
+    
+    instate_oncampus_non_tuition =
+      instate_oncampus_coa - chg2at2 - chg2af2,
+    
+    instate_offcampus_non_tuition =
+      instate_offcampus_coa - chg2at2 - chg2af2,
+    
+    instate_average_non_tuition = rowMeans(
+      cbind(instate_oncampus_non_tuition, instate_offcampus_non_tuition),
+      na.rm = TRUE
+    ),
+    
+    instate_average_coa = if_else(
+      is.nan(instate_average_coa),
+      NA_real_,
+      instate_average_coa
+    ),
+    
+    instate_average_non_tuition = if_else(
+      is.nan(instate_average_non_tuition),
+      NA_real_,
+      instate_average_non_tuition
+    )
+  )
+    
+  
+    mutate(
     instate_oncampus_coa = chg2at2 + chg4ay2 + chg5ay2 + chg6ay2,
-    instate_offcampus_coa = chg2at2 + chg4ay2 + chg7ay2 + chg8ay2
+    instate_offcampus_coa = chg2at2 + chg4ay2 + chg7ay2 + chg8ay2,
+    instate_average_coa = (instate_oncampus_coa + instate_offcampus_coa) / 2,
+    instate_oncampus_non_tuition = instate_oncampus_coa - chg2at2,
+    instate_offcampus_non_tuition = instate_offcampus_coa - chg2at2,
+    instate_average_non_tuition =
+      (instate_oncampus_non_tuition + instate_offcampus_non_tuition) / 2
   )
 
 #ADM
@@ -168,9 +210,13 @@ ipeds <- hd %>%
   "Fips County Code" = "countycd",
   "County Name" = "countynm",
   "In-State Cost of Attendance (On Campus)" = "instate_oncampus_coa", 
-  "In-State Cost of Attendance (Off Campus)" = "instate_offcampus_coa", 
+  "In-State Cost of Attendance (Off Campus)" = "instate_offcampus_coa",
+  "In-State COA - Tuition and Fees (On Campus)" = "instate_oncampus_non_tuition",
+  "In-State COA - Tuition and Fees (Off Campus)" = "instate_offcampus_non_tuition",
+  "In-State COA - Tuition and Fees" = "instate_average_non_tuition",
   "Published In-State Tuition" = "chg2at2",
   "Published In-State Fees" = "chg2af2",
+  "In-State Cost of Attendance" = "instate_average_coa",
   "Published Out-of-State Tuition" = "chg3at2",
   "Published Out-of-State Fees" = "chg3af2",
   "Books and Supplies" = "chg4ay2",

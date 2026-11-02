@@ -44,11 +44,9 @@ table(filtered_results$`Sector of Institution`)
 
 # Variables in model
 variables <- c(
-  'In-State Cost of Attendance', 'Median Student Loan Debt', 'Median Student Loan Debt (0-30,000)', '10 Year Median Earnings', '10 Year Median Earnings (0-30,000)', 'Published In-State Tuition',
-  'Average net price-students awarded grant or scholarship aid 2022-23', 'Average net price (income $0-30k)-students awarded Title IV aid 2022-23', 'Average Net Price for Students Awarded Title IV Federal Financial Aid, Income Level (0-30,000)',
-  'Average Amount of Grant and Scholarship Aid Awarded, Income Level (0-30,000)', 'Percent of Students Awarded Pell Grants', 'Degree of Urbanization',
-  'Total Amount of Grant and Scholarship Aid Awarded, Income Level (0-30,000)', 'Instructional expenditures per full-time equivalent student',
-  'Graduation rate - 4 years (total)', 'Graduation rate - 6 years total', 'Student-to-faculty ratio', 'Proportion of faculty that is full-time', 'Three-year cohort default rate'
+  'In-State Cost of Attendance', 'In-State COA - Tuition and Fees (Average)', 'Median Student Loan Debt', 'Median Student Loan Debt (0-30,000)', '10 Year Median Earnings', '10 Year Median Earnings (0-30,000)', 'Published In-State Tuition',
+  'Average net price-students awarded grant or scholarship aid 2022-23', 'Average net price (income $0-30k)-students awarded Title IV aid 2022-23', 'Average Net Price for Students Awarded Title IV Federal Financial Aid, Income Level (0-30,000)', 'Percent of Students Awarded Pell Grants', 'Degree of Urbanization', 'Instructional expenditures per full-time equivalent student',
+  'Graduation rate - 4 years (total)', 'Graduation rate - 6 years total', 'Student-to-faculty ratio', 'Proportion of faculty that is full-time', 'Three-year cohort default rate', 'Percent of Students Awarded Institutional Grant Aid', 'Average Amount of Institutional Grant Aid Awarded to Students', 'Percent of Students Awarded State/Local Grant Aid', 'Average Amount of State/Local Grant Aid Awarded to Students', 'Graduation rate - 6 years total', 'Percent Degrees Awarded in Health Sciences', 'Percent Degrees Awarded in Business'
 )
 
 for (v in variables) {
@@ -86,10 +84,11 @@ filtered_results <- filtered_results %>%
   mutate(
     net_price_0_30k_1000 = `Average net price (income $0-30k)-students awarded Title IV aid 2022-23` / 1000, 
     in_state_coa_1000 = `In-State Cost of Attendance` / 1000,
+    in_state_coa_non_tuition_1000 = `In-State COA - Tuition and Fees` / 1000,
     in_state_tuition_1000 = `Published In-State Tuition` / 1000,
-    avg_grant_aid_0_30k_1000 = `Average grant/scholarship aid awarded-income $0-30k 2022-23` / 1000,
+#    avg_grant_aid_0_30k_1000 = `Average grant/scholarship aid awarded-income $0-30k 2022-23` / 1000,
 #    pct_pell_1000 = `Percent of Students Awarded Pell Grants` / 1000,
-    total_grant_aid_0_30k_1000 = `Total grant/scholarship aid awarded-income $0-30k 2022-23` / 1000,
+#    total_grant_aid_0_30k_1000 = `Total grant/scholarship aid awarded-income $0-30k 2022-23` / 1000,
     instruction_expenses_fte_1000 = `Instructional expenditures per full-time equivalent student` / 1000,
 #    grad_rate_4yr_1000 = `Graduation rate - 4 years (total)` / 1000,
 #    stu_fac_ratio_1000 = `Student-to-faculty ratio` / 1000,
@@ -97,6 +96,8 @@ filtered_results <- filtered_results %>%
 #    cdr_1000 = `Three-year cohort default rate` / 1000,
 #    pct_stem_degrees_1000 = `Percent Degrees Awarded in Science, Technology, Engineering, and Math` / 1000,
 #    pct_arts_degrees_1000 = `Percent Degrees Awarded in Arts & Humanities` / 1000,
+    avg_institutional_aid_1000 = `Average Amount of Institutional Grant Aid Awarded to Students` / 1000,
+    avg_state_local_aid_1000 = `Average Amount of State/Local Grant Aid Awarded to Students` / 1000,
   )
 
 #filtered_results$pell_proportion <-
@@ -214,13 +215,13 @@ mod1 <- lm(
 
 summary(mod1)
 
+#CAN I DELETE BELOW?
 x_vars <- c(
   "net_price_0_30k_1000",
   "in_state_coa_1000",
+  "in_state_coa_non_tuition_1000",
   "in_state_tuition_1000",
-  "avg_grant_aid_0_30k_1000",
   "pct_pell_1000",
-  "total_grant_aid_0_30k_1000",
   "instruction_expenses_fte_1000",
   "grad_rate_4yr_1000",
   "stu_fac_ratio_1000",
@@ -234,19 +235,22 @@ x_vars <- c(
 
 # DOLLARS VARS / 1000s
 # COA
+# In-State COA - Tuition and Fees
 # Cost of Tuition
 # Net Price
-# Average Grant Aid for Students With Family Incomes of $0–$30,000 
-# Total Grant Award Amount for Students With Family Incomes of $0–$30,000 
-# Instructional Expenses per FTE 
+# Instructional Expenses per FTE
+# Average Amount of Institutional Grant Aid Awarded to Students
+# Average Amount of State/Local Grant Aid Awarded to Students
+
 
 x_vars <- c(
   "net_price_0_30k_1000",
   "in_state_coa_1000",
+  "in_state_coa_non_tuition_1000",
   "in_state_tuition_1000",
-  "avg_grant_aid_0_30k_1000",
-  "total_grant_aid_0_30k_1000",
-  "instruction_expenses_fte_1000"
+  "instruction_expenses_fte_1000",
+  "avg_institutional_aid_1000",
+  "avg_state_local_aid_1000"
 )
 # Save all model summaries in one file
 for (i in seq_along(x_vars)) {
@@ -271,10 +275,16 @@ for (i in seq_along(x_vars)) {
 # Graduation rate 
 # Student-faculty ratio 
 # Proportion of Faculty That Are Full-Time 
-# CDR 
-# ADD: % degrees awarded... from CR: STEM, Arts & Humanities
+# CDR
+# Percent of Students Awarded Institutional Grant Aid
+# Percent of Students Awarded State/Local Grant Aid
+# Graduation rate - 6 years total
+# Percent Degrees Awarded in Health Sciences
+# Percent Degrees Awarded in Business
+# Percent Degrees Awarded in STEM
+# Percent Degrees Awarded in Arts & Humanities
 
-x_vars <- c("Percent of Students Awarded Pell Grants", "Graduation rate - 4 years (total)", "Student-to-faculty ratio", "Proportion of faculty that is full-time", "Three-year cohort default rate", "Percent Degrees Awarded in Science, Technology, Engineering, and Math", "Percent Degrees Awarded in Arts & Humanities", "urbanization")
+x_vars <- c("Percent of Students Awarded Pell Grants", "Graduation rate - 4 years (total)", "Student-to-faculty ratio", "Proportion of faculty that is full-time", "Three-year cohort default rate", "Percent Degrees Awarded in Science, Technology, Engineering, and Math", "Percent Degrees Awarded in Arts & Humanities", "urbanization", "Percent of Students Awarded Institutional Grant Aid", "Percent of Students Awarded State/Local Grant Aid", "Graduation rate - 6 years total", "Percent Degrees Awarded in Health Sciences", "Percent Degrees Awarded in Business")
 # Save all model summaries in one file
 for (i in seq_along(x_vars)) {
   model <- lm(
@@ -294,23 +304,29 @@ for (i in seq_along(x_vars)) {
 }
 
 
+###
+###
+
+  
 ### TEST RATIO: debt-to-earnings (0-30k) / looping X vars
 
 # DOLLARS VARS / 1000s
 # COA
+# In-State COA - Tuition and Fees
 # Cost of Tuition
 # Net Price
-# Average Grant Aid for Students With Family Incomes of $0–$30,000 
-# Total Grant Award Amount for Students With Family Incomes of $0–$30,000 
-# Instructional Expenses per FTE 
+# Instructional Expenses per FTE
+# Average Amount of Institutional Grant Aid Awarded to Students
+# Average Amount of State/Local Grant Aid Awarded to Students
 
 x_vars <- c(
   "net_price_0_30k_1000",
   "in_state_coa_1000",
+  "in_state_coa_non_tuition_1000",
   "in_state_tuition_1000",
-  "avg_grant_aid_0_30k_1000",
-  "total_grant_aid_0_30k_1000",
-  "instruction_expenses_fte_1000"
+  "instruction_expenses_fte_1000",
+  "avg_institutional_aid_1000",
+  "avg_state_local_aid_1000"
 )
 # Save all model summaries in one file
 for (i in seq_along(x_vars)) {
@@ -335,10 +351,16 @@ for (i in seq_along(x_vars)) {
 # Graduation rate 
 # Student-faculty ratio 
 # Proportion of Faculty That Are Full-Time 
-# CDR 
-# ADD: % degrees awarded... from CR: STEM, Arts & Humanities
+# CDR
+# Percent of Students Awarded Institutional Grant Aid
+# Percent of Students Awarded State/Local Grant Aid
+# Graduation rate - 6 years total
+# Percent Degrees Awarded in Health Sciences
+# Percent Degrees Awarded in Business
+# Percent Degrees Awarded in STEM
+# Percent Degrees Awarded in Arts & Humanities
 
-x_vars <- c("Percent of Students Awarded Pell Grants", "Graduation rate - 4 years (total)", "Student-to-faculty ratio", "Proportion of faculty that is full-time", "Three-year cohort default rate", "Percent Degrees Awarded in Science, Technology, Engineering, and Math", "Percent Degrees Awarded in Arts & Humanities", "urbanization")
+x_vars <- c("Percent of Students Awarded Pell Grants", "Graduation rate - 4 years (total)", "Student-to-faculty ratio", "Proportion of faculty that is full-time", "Three-year cohort default rate", "Percent Degrees Awarded in Science, Technology, Engineering, and Math", "Percent Degrees Awarded in Arts & Humanities", "urbanization", "Percent of Students Awarded Institutional Grant Aid", "Percent of Students Awarded State/Local Grant Aid", "Graduation rate - 6 years total", "Percent Degrees Awarded in Health Sciences", "Percent Degrees Awarded in Business")
 # Save all model summaries in one file
 for (i in seq_along(x_vars)) {
   model <- lm(
@@ -360,18 +382,25 @@ for (i in seq_along(x_vars)) {
 
 
 #X vars for consideration
-  
+
 #Locale/Urbanicity
 
 # COA
+# In-State COA - Tuition and Fees
 # Cost of Tuition
 # Net Price
-# Average Grant Aid for Students With Family Incomes of $0–$30,000 
 # Percent of Students Receiving Pell Grants
-# Total Grant Award Amount for Students With Family Incomes of $0–$30,000 
 # Instructional Expenses per FTE 
 # Graduation rate 
 # Student-faculty ratio 
 # Proportion of Faculty That Are Full-Time 
 # CDR 
-# ADD: % degrees awarded... from CR: STEM, Arts & Humanities
+# Percent of Students Awarded Institutional Grant Aid
+# Average Amount of Institutional Grant Aid Awarded to Students
+# Percent of Students Awarded State/Local Grant Aid
+# Average Amount of State/Local Grant Aid Awarded to Students
+# Graduation rate - 6 years total
+# Percent Degrees Awarded in Health Sciences
+# Percent Degrees Awarded in Business
+# Percent Degrees Awarded in STEM
+# Percent Degrees Awarded in Arts & Humanities
