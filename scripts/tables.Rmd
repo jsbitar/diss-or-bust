@@ -1,0 +1,193 @@
+---
+title: 'Regression Summary'
+output:
+  word_document: default
+  powerpoint_presentation: default
+format:
+  docx: default
+  pptx: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(flextable)
+library(broom)
+
+data_dir <- file.path('..', 'data')
+
+results <- read_csv(file.path(data_dir, 'regression_results.csv')) %>% 
+  mutate(
+    keep = `Carnegie Classification 2015: Basic` %in% c(
+      'Baccalaureate Colleges: Arts & Sciences Focus', 'Baccalaureate Colleges: Diverse Fields', "Baccalaureate/Associate's Colleges: Mixed Baccalaureate/Associate's",
+      "Master's Colleges & Universities: Larger Programs", "Master's Colleges & Universities: Medium Programs", "Master's Colleges & Universities: Small Programs",
+      'Doctoral Universities: Moderate Research Activity', 'Special Focus Four-Year: Arts, Music & Design Schools', 'Special Focus Four-Year: Business & Management Schools',
+      'Special Focus Four-Year: Engineering Schools', 'Special Focus Four-Year: Faith-Related Institutions', 'Special Focus Four-Year: Law Schools', 'Special Focus Four-Year: Medical Schools & Centers', 
+      'Special Focus Four-Year: Other Health Professions Schools', 'Special Focus Four-Year: Other Special Focus Institutions', 'Special Focus Four-Year: Other Technology-Related Schools'
+    ) & (`Percent admitted total` > 0.5 | is.na(`Percent admitted total`))
+  )
+
+filtered_results <- results %>%
+  filter(keep) %>% 
+  mutate(
+    net_price_0_30k_1000 = `Average net price (income $0-30k)-students awarded Title IV aid 2022-23` / 1000, 
+    in_state_coa_1000 = `In-State Cost of Attendance` / 1000,
+    in_state_coa_non_tuition_1000 = `In-State COA - Tuition and Fees` / 1000,
+    in_state_tuition_1000 = `Published In-State Tuition` / 1000,
+#    avg_grant_aid_0_30k_1000 = `Average grant/scholarship aid awarded-income $0-30k 2022-23` / 1000,
+#    pct_pell_1000 = `Percent of Students Awarded Pell Grants` / 1000,
+#    total_grant_aid_0_30k_1000 = `Total grant/scholarship aid awarded-income $0-30k 2022-23` / 1000,
+    instruction_expenses_fte_1000 = `Instructional expenditures per full-time equivalent student` / 1000,
+#    grad_rate_4yr_1000 = `Graduation rate - 4 years (total)` / 1000,
+#    stu_fac_ratio_1000 = `Student-to-faculty ratio` / 1000,
+#    faculty_fte_1000 = `Proportion of faculty that is full-time` / 1000,
+#    cdr_1000 = `Three-year cohort default rate` / 1000,
+#    pct_stem_degrees_1000 = `Percent Degrees Awarded in Science, Technology, Engineering, and Math` / 1000,
+#    pct_arts_degrees_1000 = `Percent Degrees Awarded in Arts & Humanities` / 1000,
+    avg_institutional_aid_1000 = `Average Amount of Institutional Grant Aid Awarded to Students` / 1000,
+    avg_state_local_aid_1000 = `Average Amount of State/Local Grant Aid Awarded to Students` / 1000,
+    urbanization = case_when(
+      `Degree of Urbanization` %in% c("Town: Fringe", "Town: Distant", "Town: Remote") ~ "Town",
+      `Degree of Urbanization` %in% c("Rural: Fringe", "Rural: Distant", "Rural: Remote") ~ "Rural",
+      `Degree of Urbanization` %in% c("Suburb: Midsize", "Suburb: Small") ~ "Suburb: Midsize/Small",
+      TRUE ~ as.character(`Degree of Urbanization`)
+    ),
+    urbanization = factor(
+      urbanization,
+      levels = c(
+        "City: Large",
+        "City: Midsize",
+        "City: Small",
+        "Suburb: Large",
+        "Suburb: Midsize/Small",
+        "Town",
+        "Rural"
+      )
+    )
+  )
+```
+
+```{r}
+mod <- lm(
+  `10 Year Median Earnings (0-30,000)` ~ 
+    net_price_0_30k_1000 +
+    urbanization,
+  data = filtered_results
+)
+
+# ---- EDIT HERE: one or more models; list names become column headers ----
+# (names can't contain '_'; use backticks for spaces, e.g. `Model 1` = ...)
+models <- list(
+  Baseline    = mod
+)
+
+# ---- EDIT HERE: row order + labels; term = NA marks a superrow ----
+# Rows for terms that aren't in any model are dropped automatically,
+# as are superrows left with nothing under them.
+rows <- tribble(
+  ~term,                                  ~label,
+  NA,                                     'Net Price',
+  'net_price_0_30k_1000',                 '(Income $0-30k)',
+  NA,                                     'Urbanization',
+  'urbanizationCity: Midsize',            'City: Midsize',
+  'urbanizationCity: Small',              'City: Small',
+  'urbanizationSuburb: Large',            'Suburb: Large',
+  'urbanizationSuburb: Midsize/Small',    'Suburb: Midsize/Small',
+  'urbanizationTown',                     'Town',
+  'urbanizationRural',                    'Rural'
+)
+```
+
+```{r build}
+stopifnot(!is.null(names(models)), !any(grepl('_', names(models))))
+
+# 1. Pull coef (with stars) and SE out of an lm object
+extract_coefs <- function(fit, model_name) {
+  tidy(fit) %>%
+    mutate(
+      stars = case_when(p.value < .001 ~ '***',
+                        p.value < .01  ~ '**',
+                        p.value < .05  ~ '*',
+                        TRUE           ~ ''),
+      '{model_name}_Coef.' := sprintf('%.3f%s', estimate, stars),
+      '{model_name}_SE'    := sprintf('%.3f', std.error)
+    ) %>%
+    select(term, starts_with(model_name))
+}
+
+coefs <- imap(models, extract_coefs) %>% reduce(full_join, by = 'term')
+
+coef_cols  <- paste0(names(models), '_Coef.')
+value_cols <- as.vector(rbind(coef_cols, paste0(names(models), '_SE')))
+
+# 2. Model fit rows (shown in the Coef. columns)
+fit_rows <- imap(models, \(m, nm) tibble(
+  label = c('N', 'Adj. R\u00b2'),
+  '{nm}_Coef.' := c(format(nobs(m)), sprintf('%.3f', glance(m)$adj.r.squared))
+)) %>% reduce(left_join, by = 'label')
+
+# 3. Assemble: join, drop empty rows/superrows, append fit stats
+tbl <- rows %>%
+  mutate(super = is.na(term)) %>%
+  left_join(coefs, by = 'term') %>%
+  mutate(has_est = if_any(all_of(coef_cols), ~ !is.na(.x)),
+         .grp = cumsum(super)) %>%
+  filter(super | has_est) %>%
+  group_by(.grp) %>%
+  filter(!(super & n() == 1)) %>%
+  ungroup() %>%
+  select(-has_est, -.grp) %>%
+  bind_rows(tibble(label = ''), fit_rows)
+
+stat_rows <- which(tbl$label %in% fit_rows$label)
+super_rows  <- which(tbl$super %in% TRUE)   # bold these
+indent_rows <- which(!is.na(tbl$term))      # indent these
+
+tbl <- tbl %>% mutate(across(where(is.character), ~ replace_na(.x, '')))
+```
+
+# Table
+
+```{r table, ft.left = 0.5, ft.top = 1.3}
+ft <- flextable(tbl, col_keys = c('label', value_cols))
+
+if (length(models) > 1) {
+  # Model name spans its Coef. + SE
+  ft <- ft %>%
+    separate_header(split = '_') %>%
+    compose(i = 1, j = 'label', part = 'header', value = as_paragraph(''))
+} else {
+  # Single model: one header row, no model name
+  ft <- ft %>%
+    set_header_labels(values = setNames(list('', 'Coef.', 'SE'),
+                                        c('label', value_cols)))
+}
+
+ft <- ft %>%
+  theme_booktabs() %>%
+  bold(i = super_rows, j = 1) %>%
+  bold(i = stat_rows, j = 1) %>%
+  bold(part = 'header') %>%
+  padding(i = indent_rows, j = 1, padding.left = 15) %>%
+  align(j = -1, align = 'center', part = 'all') %>%
+  add_footer_lines('Significance levels: * p < 0.05, ** p < 0.01, *** p < 0.001.') %>%
+  autofit()
+
+if (knitr::pandoc_to('pptx')) {
+  full_width <- 9     # default 16:9 slide is 10 in wide, minus 0.5 in margins
+  # Shorter rows so the table fits the slide's content area (~3.7 in tall)
+  ft <- ft %>%
+    fontsize(size = 10, part = 'all') %>%
+    padding(padding.top = 1, padding.bottom = 1, part = 'all') %>%
+    height_all(height = 0.2, part = 'all') %>%
+    hrule(rule = 'exact', part = 'all')
+} else {
+  full_width <- 6.5   # Word: US letter (8.5 in) minus 1 in margins
+}
+ft <- ft %>%
+  width(width = dim(ft)$widths * full_width / sum(dim(ft)$widths)) %>%
+  set_table_properties(layout = 'fixed')
+
+ft
+```
